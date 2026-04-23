@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Campus Life Planner</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* iOS風のベーススタイル */
+        :root {
+            --bg-color: #F2F2F7;
+            --card-bg: #FFFFFF;
+            --primary-color: #007AFF;
+            --text-main: #000000;
+            --text-sub: #8E8E93;
+            --danger: #FF3B30;
+            --warning: #FF9500;
+            --success: #34C759;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Segoe UI", Roboto, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            padding-bottom: 80px; /* タブバーのスペース */
+        }
+
+        /* ヘッダー */
+        header {
+            background-color: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            position: fixed;
+            top: 0;
+            width: 100%;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 600;
+            border-bottom: 0.5px solid rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+
+        /* コンテンツエリア */
+        main {
+            padding: 80px 16px 20px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .view-section {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .view-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* iOS風カード */
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .section-title {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--text-main);
+        }
+
+        .card-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-sub);
+            text-transform: uppercase;
+            margin-bottom: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        /* リストアイテム */
+        .list-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 0.5px solid #E5E5EA;
+        }
+        .list-item:last-child {
+            border-bottom: none;
+        }
+        
+        .list-content {
+            flex-grow: 1;
+            margin-left: 12px;
+        }
+        .list-title {
+            font-size: 16px;
+            font-weight: 500;
+        }
+        .list-desc {
+            font-size: 13px;
+            color: var(--text-sub);
+            margin-top: 4px;
+        }
+        .badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            color: white;
+        }
+        .badge.red { background-color: var(--danger); }
+        .badge.orange { background-color: var(--warning); }
+
+        /* 時間割グリッド */
+        .timetable {
+            display: grid;
+            grid-template-columns: 40px repeat(5, 1fr);
+            gap: 4px;
+            text-align: center;
+            font-size: 12px;
+        }
+        .tt-header { font-weight: 600; padding: 8px 0; color: var(--text-sub); }
+        .tt-time { font-weight: 600; color: var(--text-sub); display: flex; align-items: center; justify-content: center; }
+        .tt-cell {
+            background-color: #E5E5EA;
+            border-radius: 6px;
+            padding: 8px 4px;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+        }
+        .tt-cell.active-class { background-color: rgba(0, 122, 255, 0.15); color: var(--primary-color); }
+
+        /* タイムライン */
+        .timeline {
+            position: relative;
+            padding-left: 20px;
+        }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 5px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background-color: #E5E5EA;
+        }
+        .tl-item {
+            position: relative;
+            margin-bottom: 24px;
+        }
+        .tl-dot {
+            position: absolute;
+            left: -20px;
+            top: 4px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            border: 2px solid var(--bg-color);
+        }
+        .tl-time { font-size: 13px; color: var(--text-sub); font-weight: 600; margin-bottom: 4px; }
+        .tl-title { font-size: 16px; font-weight: 500; }
+
+        /* ボトムナビゲーション (タブバー) */
+        .tab-bar {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            height: 80px;
+            background-color: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 0.5px solid rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding-bottom: 15px; /* iPhoneのホームバー考慮 */
+            z-index: 1000;
+        }
+        .tab-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--text-sub);
+            font-size: 10px;
+            font-weight: 500;
+            cursor: pointer;
+            width: 25%;
+        }
+        .tab-item i {
+            font-size: 22px;
+            margin-bottom: 4px;
+        }
+        .tab-item.active {
+            color: var(--primary-color);
+        }
+
+        /* チェックボックス */
+        input[type="checkbox"] {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            border: 1px solid #C7C7CC;
+            appearance: none;
+            outline: none;
+            cursor: pointer;
+            position: relative;
+        }
+        input[type="checkbox"]:checked {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        input[type="checkbox"]:checked::after {
+            content: '\f00c';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            color: white;
+            position: absolute;
+            font-size: 12px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+    </style>
+</head>
+<body>
+
+    <header id="header-title">ホーム</header>
+
+    <main>
+        <section id="view-home" class="view-section active">
+            <h1 class="section-title" id="today-date"></h1>
+            
+            <div class="card">
+                <div class="card-title">今日締め切りの課題・予定</div>
+                <div class="list-item">
+                    <i class="fa-solid fa-circle-exclamation" style="color: var(--danger); font-size: 20px;"></i>
+                    <div class="list-content">
+                        <div class="list-title">情報工学レポート提出</div>
+                        <div class="list-desc">本日 23:59 まで</div>
+                    </div>
+                    <div class="badge red">今日</div>
+                </div>
+                <div class="list-item">
+                    <i class="fa-regular fa-calendar-check" style="color: var(--primary-color); font-size: 20px;"></i>
+                    <div class="list-content">
+                        <div class="list-title">ゼミのミーティング</div>
+                        <div class="list-desc">本日 14:00 - 15:30</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">期限が近い課題</div>
+                <div class="list-item">
+                    <div class="list-content" style="margin-left: 0;">
+                        <div class="list-title">プログラミング演習 最終課題</div>
+                        <div class="list-desc">残り2日 (金曜日)</div>
+                    </div>
+                    <div class="badge orange">要確認</div>
+                </div>
+                <div class="list-item">
+                    <div class="list-content" style="margin-left: 0;">
+                        <div class="list-title">英語プレゼン資料作成</div>
+                        <div class="list-desc">残り4日 (日曜日)</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="view-timeline" class="view-section">
+            <h1 class="section-title">一日の予定</h1>
+            <div class="card">
+                <div class="timeline">
+                    <div class="tl-item">
+                        <div class="tl-dot"></div>
+                        <div class="tl-time">09:00 - 10:30</div>
+                        <div class="tl-title">1限：微分積分学</div>
+                    </div>
+                    <div class="tl-item">
+                        <div class="tl-dot" style="background-color: var(--warning);"></div>
+                        <div class="tl-time">10:40 - 12:10</div>
+                        <div class="tl-title">2限：線形代数</div>
+                    </div>
+                    <div class="tl-item">
+                        <div class="tl-dot" style="background-color: var(--text-sub);"></div>
+                        <div class="tl-time">12:10 - 13:00</div>
+                        <div class="tl-title">昼休み（学食）</div>
+                    </div>
+                    <div class="tl-item">
+                        <div class="tl-dot"></div>
+                        <div class="tl-time">14:00 - 15:30</div>
+                        <div class="tl-title">ゼミミーティング</div>
+                    </div>
+                    <div class="tl-item">
+                        <div class="tl-dot" style="background-color: var(--success);"></div>
+                        <div class="tl-time">18:00 - 22:00</div>
+                        <div class="tl-title">アルバイト</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="view-timetable" class="view-section">
+            <h1 class="section-title">春学期 時間割</h1>
+            <div class="card">
+                <div class="timetable">
+                    <div class="tt-header"></div>
+                    <div class="tt-header">月</div>
+                    <div class="tt-header">火</div>
+                    <div class="tt-header">水</div>
+                    <div class="tt-header">木</div>
+                    <div class="tt-header">金</div>
+                    
+                    <div class="tt-time">1</div>
+                    <div class="tt-cell active-class">微積</div>
+                    <div class="tt-cell"></div>
+                    <div class="tt-cell active-class">物理</div>
+                    <div class="tt-cell"></div>
+                    <div class="tt-cell active-class">英語</div>
+
+                    <div class="tt-time">2</div>
+                    <div class="tt-cell active-class">線形</div>
+                    <div class="tt-cell active-class">プロ<br>演習</div>
+                    <div class="tt-cell"></div>
+                    <div class="tt-cell active-class">歴史</div>
+                    <div class="tt-cell active-class">英語</div>
+
+                    <div class="tt-time">3</div>
+                    <div class="tt-cell"></div>
+                    <div class="tt-cell active-class">OS</div>
+                    <div class="tt-cell active-class">情工</div>
+                    <div class="tt-cell"></div>
+                    <div class="tt-cell"></div>
+
+                    <div class="tt-time">4</div>
+                    <div class="tt-cell"></div>
+                    <div class="tt-cell"></div>
+                    <div class="tt-cell"></div>
+                    <div class="tt-cell active-class">体育</div>
+                    <div class="tt-cell"></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="view-tasks" class="view-section">
+            <h1 class="section-title">課題・タスク</h1>
+            <div class="card">
+                <div class="card-title">未完了</div>
+                <div class="list-item">
+                    <input type="checkbox">
+                    <div class="list-content">
+                        <div class="list-title">情報工学レポート提出</div>
+                        <div class="list-desc" style="color: var(--danger);">本日 23:59まで</div>
+                    </div>
+                </div>
+                <div class="list-item">
+                    <input type="checkbox">
+                    <div class="list-content">
+                        <div class="list-title">プログラミング演習 最終課題</div>
+                        <div class="list-desc">残り2日</div>
+                    </div>
+                </div>
+                <div class="list-item">
+                    <input type="checkbox">
+                    <div class="list-content">
+                        <div class="list-title">英語プレゼン資料作成</div>
+                        <div class="list-desc">残り4日</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-title">完了済み</div>
+                <div class="list-item" style="opacity: 0.5;">
+                    <input type="checkbox" checked disabled>
+                    <div class="list-content">
+                        <div class="list-title" style="text-decoration: line-through;">物理学小テスト復習</div>
+                        <div class="list-desc">昨日完了</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <nav class="tab-bar">
+        <div class="tab-item active" onclick="switchTab('home', 'ホーム', this)">
+            <i class="fa-solid fa-house"></i>
+            <span>ホーム</span>
+        </div>
+        <div class="tab-item" onclick="switchTab('timeline', 'タイムライン', this)">
+            <i class="fa-solid fa-clock"></i>
+            <span>予定</span>
+        </div>
+        <div class="tab-item" onclick="switchTab('timetable', '時間割', this)">
+            <i class="fa-solid fa-table-cells-large"></i>
+            <span>時間割</span>
+        </div>
+        <div class="tab-item" onclick="switchTab('tasks', '課題管理', this)">
+            <i class="fa-solid fa-check-double"></i>
+            <span>課題</span>
+        </div>
+    </nav>
+
+    <script>
+        // 今日の日付をフォーマットして表示
+        const today = new Date();
+        const options = { month: 'long', day: 'numeric', weekday: 'short' };
+        document.getElementById('today-date').innerText = today.toLocaleDateString('ja-JP', options);
+
+        // タブ切り替えロジック
+        function switchTab(tabId, title, element) {
+            // ヘッダータイトルの変更
+            document.getElementById('header-title').innerText = title;
+
+            // 全てのビューを非表示
+            const views = document.querySelectorAll('.view-section');
+            views.forEach(view => view.classList.remove('active'));
+
+            // 選択されたビューを表示
+            document.getElementById('view-' + tabId).classList.add('active');
+
+            // タブのアイコンのアクティブ状態を変更
+            const tabs = document.querySelectorAll('.tab-item');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            element.classList.add('active');
+            
+            // ページ上部へスクロール
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>
