@@ -2,11 +2,11 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Campus Life Planner</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Campus Life Planner Pro</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* iOS風のベーススタイル */
+        /* CSS変数（ライト/ダークモード対応） */
         :root {
             --bg-color: #F2F2F7;
             --card-bg: #FFFFFF;
@@ -16,6 +16,18 @@
             --danger: #FF3B30;
             --warning: #FF9500;
             --success: #34C759;
+            --border-color: #E5E5EA;
+            --glass-bg: rgba(255, 255, 255, 0.85);
+        }
+
+        /* ダークモード時の色設定 */
+        body.dark-mode {
+            --bg-color: #000000;
+            --card-bg: #1C1C1E;
+            --text-main: #FFFFFF;
+            --text-sub: #AEAEB2;
+            --border-color: #38383A;
+            --glass-bg: rgba(28, 28, 30, 0.85);
         }
 
         * {
@@ -24,36 +36,50 @@
             padding: 0;
             font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Segoe UI", Roboto, sans-serif;
             -webkit-tap-highlight-color: transparent;
+            transition: background-color 0.3s, color 0.3s;
         }
 
         body {
             background-color: var(--bg-color);
             color: var(--text-main);
-            padding-bottom: 80px; /* タブバーのスペース */
+            /* iPhoneのホームインジケータ領域を確保 */
+            padding-bottom: calc(80px + env(safe-area-inset-bottom));
         }
 
         /* ヘッダー */
         header {
-            background-color: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
+            background-color: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             position: fixed;
             top: 0;
             width: 100%;
-            height: 60px;
+            /* iPhoneのノッチ領域を確保 */
+            padding-top: env(safe-area-inset-top);
+            height: calc(60px + env(safe-area-inset-top));
             display: flex;
             align-items: center;
-            justify-content: center;
+            justify-content: space-between;
+            padding-left: 20px;
+            padding-right: 20px;
             font-size: 18px;
             font-weight: 600;
-            border-bottom: 0.5px solid rgba(0, 0, 0, 0.1);
+            border-bottom: 0.5px solid var(--border-color);
             z-index: 1000;
+        }
+
+        .theme-toggle {
+            background: none;
+            border: none;
+            color: var(--primary-color);
+            font-size: 20px;
+            cursor: pointer;
         }
 
         /* コンテンツエリア */
         main {
-            padding: 80px 16px 20px;
-            max-width: 600px;
+            padding: calc(80px + env(safe-area-inset-top)) 16px 20px;
+            max-width: 100%;
             margin: 0 auto;
         }
 
@@ -61,395 +87,301 @@
             display: none;
             animation: fadeIn 0.3s ease;
         }
-
-        .view-section.active {
-            display: block;
-        }
+        .view-section.active { display: block; }
 
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(5px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* iOS風カード */
+        /* カードデザイン */
         .card {
             background-color: var(--card-bg);
-            border-radius: 12px;
+            border-radius: 16px;
             padding: 16px;
             margin-bottom: 16px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
         }
 
-        .section-title {
-            font-size: 22px;
-            font-weight: 700;
-            margin-bottom: 12px;
-            color: var(--text-main);
-        }
-
-        .card-title {
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--text-sub);
-            text-transform: uppercase;
-            margin-bottom: 12px;
-            letter-spacing: 0.5px;
-        }
+        .section-title { font-size: 24px; font-weight: 700; margin-bottom: 16px; color: var(--text-main); }
+        .card-title { font-size: 14px; font-weight: 600; color: var(--text-sub); text-transform: uppercase; margin-bottom: 12px; }
 
         /* リストアイテム */
-        .list-item {
-            display: flex;
-            align-items: center;
-            padding: 12px 0;
-            border-bottom: 0.5px solid #E5E5EA;
-        }
-        .list-item:last-child {
-            border-bottom: none;
-        }
+        .list-item { display: flex; align-items: center; padding: 12px 0; border-bottom: 0.5px solid var(--border-color); }
+        .list-item:last-child { border-bottom: none; }
+        .list-content { flex-grow: 1; margin-left: 12px; }
+        .list-title { font-size: 16px; font-weight: 500; }
+        .list-desc { font-size: 13px; color: var(--text-sub); margin-top: 4px; }
         
-        .list-content {
-            flex-grow: 1;
-            margin-left: 12px;
-        }
-        .list-title {
-            font-size: 16px;
-            font-weight: 500;
-        }
-        .list-desc {
-            font-size: 13px;
-            color: var(--text-sub);
-            margin-top: 4px;
-        }
-        .badge {
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 600;
-            color: white;
-        }
+        .badge { padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: 600; color: white; }
         .badge.red { background-color: var(--danger); }
         .badge.orange { background-color: var(--warning); }
+        .badge.blue { background-color: var(--primary-color); }
 
-        /* 時間割グリッド */
-        .timetable {
-            display: grid;
-            grid-template-columns: 40px repeat(5, 1fr);
-            gap: 4px;
-            text-align: center;
-            font-size: 12px;
-        }
-        .tt-header { font-weight: 600; padding: 8px 0; color: var(--text-sub); }
-        .tt-time { font-weight: 600; color: var(--text-sub); display: flex; align-items: center; justify-content: center; }
-        .tt-cell {
-            background-color: #E5E5EA;
-            border-radius: 6px;
-            padding: 8px 4px;
-            min-height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 500;
-        }
-        .tt-cell.active-class { background-color: rgba(0, 122, 255, 0.15); color: var(--primary-color); }
+        /* 進捗バー (便利機能) */
+        .progress-container { width: 100%; background-color: var(--border-color); border-radius: 8px; height: 8px; margin-top: 8px; overflow: hidden; }
+        .progress-bar { height: 100%; background-color: var(--success); width: 65%; border-radius: 8px; }
 
-        /* タイムライン */
-        .timeline {
-            position: relative;
-            padding-left: 20px;
-        }
-        .timeline::before {
-            content: '';
-            position: absolute;
-            left: 5px;
-            top: 0;
-            bottom: 0;
-            width: 2px;
-            background-color: #E5E5EA;
-        }
-        .tl-item {
-            position: relative;
-            margin-bottom: 24px;
-        }
-        .tl-dot {
-            position: absolute;
-            left: -20px;
-            top: 4px;
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background-color: var(--primary-color);
-            border: 2px solid var(--bg-color);
-        }
-        .tl-time { font-size: 13px; color: var(--text-sub); font-weight: 600; margin-bottom: 4px; }
-        .tl-title { font-size: 16px; font-weight: 500; }
-
-        /* ボトムナビゲーション (タブバー) */
+        /* ボトムナビゲーション (モバイル用) */
         .tab-bar {
             position: fixed;
             bottom: 0;
             width: 100%;
-            height: 80px;
-            background-color: rgba(255, 255, 255, 0.85);
+            height: calc(65px + env(safe-area-inset-bottom));
+            background-color: var(--glass-bg);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            border-top: 0.5px solid rgba(0, 0, 0, 0.1);
+            border-top: 0.5px solid var(--border-color);
             display: flex;
             justify-content: space-around;
             align-items: center;
-            padding-bottom: 15px; /* iPhoneのホームバー考慮 */
-            z-index: 1000;
+            padding-bottom: env(safe-area-inset-bottom);
+            z-index: 900;
         }
         .tab-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            color: var(--text-sub);
-            font-size: 10px;
-            font-weight: 500;
-            cursor: pointer;
-            width: 25%;
+            display: flex; flex-direction: column; align-items: center; color: var(--text-sub); font-size: 10px; font-weight: 500; cursor: pointer; width: 25%;
         }
-        .tab-item i {
-            font-size: 22px;
-            margin-bottom: 4px;
-        }
-        .tab-item.active {
-            color: var(--primary-color);
-        }
+        .tab-item i { font-size: 22px; margin-bottom: 4px; }
+        .tab-item.active { color: var(--primary-color); }
 
-        /* チェックボックス */
-        input[type="checkbox"] {
-            width: 22px;
-            height: 22px;
+        /* フローティングアクションボタン (FAB) */
+        .fab {
+            position: fixed;
+            bottom: calc(85px + env(safe-area-inset-bottom));
+            right: 20px;
+            width: 56px;
+            height: 56px;
             border-radius: 50%;
-            border: 1px solid #C7C7CC;
-            appearance: none;
-            outline: none;
-            cursor: pointer;
-            position: relative;
-        }
-        input[type="checkbox"]:checked {
             background-color: var(--primary-color);
-            border-color: var(--primary-color);
-        }
-        input[type="checkbox"]:checked::after {
-            content: '\f00c';
-            font-family: 'Font Awesome 6 Free';
-            font-weight: 900;
             color: white;
-            position: absolute;
-            font-size: 12px;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+            border: none;
+            box-shadow: 0 4px 12px rgba(0, 122, 255, 0.4);
+            font-size: 24px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            z-index: 950;
+            transition: transform 0.2s;
+        }
+        .fab:active { transform: scale(0.9); }
+
+        /* プリセット登録モーダル (iOSのボトムシート風) */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.4); z-index: 1001;
+            opacity: 0; visibility: hidden; transition: 0.3s;
+        }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        
+        .modal-sheet {
+            position: fixed; bottom: -100%; left: 0; width: 100%;
+            background-color: var(--card-bg); border-radius: 20px 20px 0 0;
+            padding: 24px 20px calc(24px + env(safe-area-inset-bottom));
+            z-index: 1002; transition: bottom 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .modal-overlay.active .modal-sheet { bottom: 0; }
+        
+        .modal-handle { width: 40px; height: 5px; background-color: var(--border-color); border-radius: 3px; margin: 0 auto 20px; }
+        
+        .preset-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 16px; }
+        .preset-btn {
+            display: flex; flex-direction: column; align-items: center; background: none; border: none; cursor: pointer; color: var(--text-main);
+        }
+        .preset-icon { width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: white; margin-bottom: 8px; }
+        .bg-blue { background-color: var(--primary-color); }
+        .bg-orange { background-color: var(--warning); }
+        .bg-green { background-color: var(--success); }
+        .bg-gray { background-color: var(--text-sub); }
+
+
+        /* =========================================
+           PC・タブレット向けのレスポンシブデザイン 
+           ========================================= */
+        @media (min-width: 768px) {
+            body { padding-bottom: 0; }
+            header { left: 250px; width: calc(100% - 250px); padding-top: 0; height: 60px; }
+            
+            /* サイドバーに変更 */
+            .tab-bar {
+                flex-direction: column; justify-content: flex-start;
+                width: 250px; height: 100vh; top: 0; left: 0; border-top: none; border-right: 1px solid var(--border-color); padding-top: 60px;
+            }
+            .tab-item { width: 100%; flex-direction: row; padding: 16px 24px; font-size: 16px; justify-content: flex-start; }
+            .tab-item i { margin-bottom: 0; margin-right: 16px; font-size: 20px; width: 24px; text-align: center; }
+            
+            main { margin-left: 250px; padding: 80px 32px 32px; max-width: 1200px; }
+            
+            /* PCでは2カラムのグリッドレイアウト */
+            .grid-container { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+            .card { height: fit-content; }
+            
+            .fab { bottom: 30px; right: 30px; width: 64px; height: 64px; font-size: 28px; }
+            
+            /* PCのモーダルは中央ポップアップに */
+            .modal-sheet {
+                bottom: auto; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.9);
+                width: 400px; border-radius: 16px; padding: 32px;
+                opacity: 0; visibility: hidden;
+            }
+            .modal-overlay.active .modal-sheet { transform: translate(-50%, -50%) scale(1); opacity: 1; visibility: visible; }
+            .modal-handle { display: none; }
         }
     </style>
 </head>
 <body>
 
-    <header id="header-title">ホーム</header>
+    <header>
+        <div id="header-title">ホーム</div>
+        <button class="theme-toggle" onclick="toggleTheme()"><i class="fa-solid fa-moon"></i></button>
+    </header>
 
     <main>
         <section id="view-home" class="view-section active">
             <h1 class="section-title" id="today-date"></h1>
             
             <div class="card">
-                <div class="card-title">今日締め切りの課題・予定</div>
-                <div class="list-item">
-                    <i class="fa-solid fa-circle-exclamation" style="color: var(--danger); font-size: 20px;"></i>
-                    <div class="list-content">
-                        <div class="list-title">情報工学レポート提出</div>
-                        <div class="list-desc">本日 23:59 まで</div>
-                    </div>
-                    <div class="badge red">今日</div>
-                </div>
-                <div class="list-item">
-                    <i class="fa-regular fa-calendar-check" style="color: var(--primary-color); font-size: 20px;"></i>
-                    <div class="list-content">
-                        <div class="list-title">ゼミのミーティング</div>
-                        <div class="list-desc">本日 14:00 - 15:30</div>
-                    </div>
+                <div class="card-title">今週のタスク完了率 (65%)</div>
+                <div class="list-desc">13件中 8件完了。いいペースです！</div>
+                <div class="progress-container">
+                    <div class="progress-bar"></div>
                 </div>
             </div>
 
-            <div class="card">
-                <div class="card-title">期限が近い課題</div>
-                <div class="list-item">
-                    <div class="list-content" style="margin-left: 0;">
-                        <div class="list-title">プログラミング演習 最終課題</div>
-                        <div class="list-desc">残り2日 (金曜日)</div>
+            <div class="grid-container">
+                <div class="card">
+                    <div class="card-title">今日締め切り・予定</div>
+                    <div class="list-item">
+                        <i class="fa-solid fa-circle-exclamation" style="color: var(--danger); font-size: 20px;"></i>
+                        <div class="list-content">
+                            <div class="list-title">情報工学レポート提出</div>
+                            <div class="list-desc">本日 23:59 まで</div>
+                        </div>
+                        <div class="badge red">今日</div>
                     </div>
-                    <div class="badge orange">要確認</div>
+                    <div class="list-item">
+                        <i class="fa-solid fa-briefcase" style="color: var(--warning); font-size: 20px;"></i>
+                        <div class="list-content">
+                            <div class="list-title">カフェ アルバイト</div>
+                            <div class="list-desc">本日 18:00 - 22:00</div>
+                        </div>
+                    </div>
                 </div>
-                <div class="list-item">
-                    <div class="list-content" style="margin-left: 0;">
-                        <div class="list-title">英語プレゼン資料作成</div>
-                        <div class="list-desc">残り4日 (日曜日)</div>
+
+                <div class="card">
+                    <div class="card-title">期限が近い課題</div>
+                    <div class="list-item">
+                        <div class="list-content" style="margin-left: 0;">
+                            <div class="list-title">プログラミング演習 最終課題</div>
+                            <div class="list-desc">残り2日 (金曜日)</div>
+                        </div>
+                        <div class="badge orange">要確認</div>
                     </div>
                 </div>
             </div>
         </section>
 
         <section id="view-timeline" class="view-section">
-            <h1 class="section-title">一日の予定</h1>
-            <div class="card">
-                <div class="timeline">
-                    <div class="tl-item">
-                        <div class="tl-dot"></div>
-                        <div class="tl-time">09:00 - 10:30</div>
-                        <div class="tl-title">1限：微分積分学</div>
-                    </div>
-                    <div class="tl-item">
-                        <div class="tl-dot" style="background-color: var(--warning);"></div>
-                        <div class="tl-time">10:40 - 12:10</div>
-                        <div class="tl-title">2限：線形代数</div>
-                    </div>
-                    <div class="tl-item">
-                        <div class="tl-dot" style="background-color: var(--text-sub);"></div>
-                        <div class="tl-time">12:10 - 13:00</div>
-                        <div class="tl-title">昼休み（学食）</div>
-                    </div>
-                    <div class="tl-item">
-                        <div class="tl-dot"></div>
-                        <div class="tl-time">14:00 - 15:30</div>
-                        <div class="tl-title">ゼミミーティング</div>
-                    </div>
-                    <div class="tl-item">
-                        <div class="tl-dot" style="background-color: var(--success);"></div>
-                        <div class="tl-time">18:00 - 22:00</div>
-                        <div class="tl-title">アルバイト</div>
-                    </div>
-                </div>
-            </div>
+            <h1 class="section-title">予定表</h1>
+            <div class="card"><p class="list-desc">（タイムライン表示エリア）</p></div>
         </section>
 
         <section id="view-timetable" class="view-section">
-            <h1 class="section-title">春学期 時間割</h1>
-            <div class="card">
-                <div class="timetable">
-                    <div class="tt-header"></div>
-                    <div class="tt-header">月</div>
-                    <div class="tt-header">火</div>
-                    <div class="tt-header">水</div>
-                    <div class="tt-header">木</div>
-                    <div class="tt-header">金</div>
-                    
-                    <div class="tt-time">1</div>
-                    <div class="tt-cell active-class">微積</div>
-                    <div class="tt-cell"></div>
-                    <div class="tt-cell active-class">物理</div>
-                    <div class="tt-cell"></div>
-                    <div class="tt-cell active-class">英語</div>
-
-                    <div class="tt-time">2</div>
-                    <div class="tt-cell active-class">線形</div>
-                    <div class="tt-cell active-class">プロ<br>演習</div>
-                    <div class="tt-cell"></div>
-                    <div class="tt-cell active-class">歴史</div>
-                    <div class="tt-cell active-class">英語</div>
-
-                    <div class="tt-time">3</div>
-                    <div class="tt-cell"></div>
-                    <div class="tt-cell active-class">OS</div>
-                    <div class="tt-cell active-class">情工</div>
-                    <div class="tt-cell"></div>
-                    <div class="tt-cell"></div>
-
-                    <div class="tt-time">4</div>
-                    <div class="tt-cell"></div>
-                    <div class="tt-cell"></div>
-                    <div class="tt-cell"></div>
-                    <div class="tt-cell active-class">体育</div>
-                    <div class="tt-cell"></div>
-                </div>
-            </div>
+            <h1 class="section-title">時間割</h1>
+            <div class="card"><p class="list-desc">（時間割グリッド表示エリア）</p></div>
         </section>
 
         <section id="view-tasks" class="view-section">
-            <h1 class="section-title">課題・タスク</h1>
-            <div class="card">
-                <div class="card-title">未完了</div>
-                <div class="list-item">
-                    <input type="checkbox">
-                    <div class="list-content">
-                        <div class="list-title">情報工学レポート提出</div>
-                        <div class="list-desc" style="color: var(--danger);">本日 23:59まで</div>
-                    </div>
-                </div>
-                <div class="list-item">
-                    <input type="checkbox">
-                    <div class="list-content">
-                        <div class="list-title">プログラミング演習 最終課題</div>
-                        <div class="list-desc">残り2日</div>
-                    </div>
-                </div>
-                <div class="list-item">
-                    <input type="checkbox">
-                    <div class="list-content">
-                        <div class="list-title">英語プレゼン資料作成</div>
-                        <div class="list-desc">残り4日</div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="card">
-                <div class="card-title">完了済み</div>
-                <div class="list-item" style="opacity: 0.5;">
-                    <input type="checkbox" checked disabled>
-                    <div class="list-content">
-                        <div class="list-title" style="text-decoration: line-through;">物理学小テスト復習</div>
-                        <div class="list-desc">昨日完了</div>
-                    </div>
-                </div>
-            </div>
+            <h1 class="section-title">課題管理</h1>
+            <div class="card"><p class="list-desc">（課題リスト表示エリア）</p></div>
         </section>
-
     </main>
+
+    <button class="fab" onclick="toggleModal()">
+        <i class="fa-solid fa-plus"></i>
+    </button>
+
+    <div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+        <div class="modal-sheet">
+            <div class="modal-handle"></div>
+            <h2 class="section-title" style="font-size: 18px; text-align: center;">予定をクイック追加</h2>
+            <div class="preset-grid">
+                <button class="preset-btn" onclick="alert('授業登録画面を開きます')">
+                    <div class="preset-icon bg-blue"><i class="fa-solid fa-graduation-cap"></i></div>
+                    <span style="font-size: 12px; font-weight:500;">授業</span>
+                </button>
+                <button class="preset-btn" onclick="alert('バイトのシフト登録画面を開きます')">
+                    <div class="preset-icon bg-orange"><i class="fa-solid fa-briefcase"></i></div>
+                    <span style="font-size: 12px; font-weight:500;">バイト</span>
+                </button>
+                <button class="preset-btn" onclick="alert('課題登録画面を開きます')">
+                    <div class="preset-icon bg-green"><i class="fa-solid fa-book-open"></i></div>
+                    <span style="font-size: 12px; font-weight:500;">課題</span>
+                </button>
+                <button class="preset-btn" onclick="alert('詳細な予定登録画面を開きます')">
+                    <div class="preset-icon bg-gray"><i class="fa-solid fa-pen"></i></div>
+                    <span style="font-size: 12px; font-weight:500;">その他</span>
+                </button>
+            </div>
+        </div>
+    </div>
 
     <nav class="tab-bar">
         <div class="tab-item active" onclick="switchTab('home', 'ホーム', this)">
-            <i class="fa-solid fa-house"></i>
-            <span>ホーム</span>
+            <i class="fa-solid fa-house"></i><span>ホーム</span>
         </div>
-        <div class="tab-item" onclick="switchTab('timeline', 'タイムライン', this)">
-            <i class="fa-solid fa-clock"></i>
-            <span>予定</span>
+        <div class="tab-item" onclick="switchTab('timeline', '予定', this)">
+            <i class="fa-solid fa-clock"></i><span>予定</span>
         </div>
         <div class="tab-item" onclick="switchTab('timetable', '時間割', this)">
-            <i class="fa-solid fa-table-cells-large"></i>
-            <span>時間割</span>
+            <i class="fa-solid fa-table-cells-large"></i><span>時間割</span>
         </div>
         <div class="tab-item" onclick="switchTab('tasks', '課題管理', this)">
-            <i class="fa-solid fa-check-double"></i>
-            <span>課題</span>
+            <i class="fa-solid fa-check-double"></i><span>課題</span>
         </div>
     </nav>
 
     <script>
-        // 今日の日付をフォーマットして表示
+        // 日付の表示
         const today = new Date();
         const options = { month: 'long', day: 'numeric', weekday: 'short' };
         document.getElementById('today-date').innerText = today.toLocaleDateString('ja-JP', options);
 
-        // タブ切り替えロジック
+        // タブ切り替え
         function switchTab(tabId, title, element) {
-            // ヘッダータイトルの変更
             document.getElementById('header-title').innerText = title;
-
-            // 全てのビューを非表示
-            const views = document.querySelectorAll('.view-section');
-            views.forEach(view => view.classList.remove('active'));
-
-            // 選択されたビューを表示
+            document.querySelectorAll('.view-section').forEach(view => view.classList.remove('active'));
             document.getElementById('view-' + tabId).classList.add('active');
-
-            // タブのアイコンのアクティブ状態を変更
-            const tabs = document.querySelectorAll('.tab-item');
-            tabs.forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-item').forEach(tab => tab.classList.remove('active'));
             element.classList.add('active');
-            
-            // ページ上部へスクロール
             window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // ダークモード切り替え (便利機能)
+        let isDarkMode = false;
+        function toggleTheme() {
+            isDarkMode = !isDarkMode;
+            document.body.classList.toggle('dark-mode');
+            const icon = document.querySelector('.theme-toggle i');
+            if(isDarkMode) {
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+            } else {
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+            }
+        }
+
+        // プリセットモーダルの開閉
+        const modal = document.getElementById('modalOverlay');
+        function toggleModal() {
+            modal.classList.add('active');
+        }
+        function closeModal(e) {
+            // 背景部分をクリックした時だけ閉じる
+            if (e.target === modal) {
+                modal.classList.remove('active');
+            }
         }
     </script>
 </body>
